@@ -26,6 +26,10 @@
       cursor: pointer;
       margin: 10px;
     }
+    .button:disabled {
+      background: gray;
+      cursor: not-allowed;
+    }
     #reward-area {
       display: none;
       margin-top: 10px;
@@ -46,21 +50,21 @@
 </head>
 <body>
 
-  <img
-    class="shiba-logo"
-    src="https://static.vecteezy.com/system/resources/previews/027/484/683/non_2x/shiba-inu-logo-free-vector.jpg"
-    alt="Shiba Inu Logo"
-  />
+  <img class="shiba-logo" src="https://static.vecteezy.com/system/resources/previews/027/484/683/non_2x/shiba-inu-logo-free-vector.jpg" alt="Shiba Inu Logo" />
   <h1>Shiba Inu Reward Bot</h1>
 
   <p>Total SHIB: <span id="balance">0</span></p>
 
-  <button class="button" id="watch-button" onclick="watchAd()">👀 Watch Ads (+7 SHIB)</button>
-
-  <div id="ad-container" style="margin: 20px auto; display: none;"></div>
+  <button class="button" id="watchAdBtn" onclick="watchAd()">👀 Watch Ads (+7 SHIB)</button>
 
   <div id="reward-area">
     <p>⏳ Please wait <span id="countdown">15</span> seconds...</p>
+  </div>
+
+  <div id="ad-container" style="margin: 20px auto; display: none;">
+    <!-- Iklan akan dimasukkan di sini -->
+    <script async="async" data-cfasync="false" src="//pl27363777.profitableratecpm.com/df82047bafa89d43b6c906d05fdf0128/invoke.js"></script>
+    <div id="container-df82047bafa89d43b6c906d05fdf0128"></div>
   </div>
 
   <hr />
@@ -75,38 +79,27 @@
   <hr />
   <h2>🏆 Top 10 Earners</h2>
   <table id="top-earners">
-    <thead>
-      <tr><th>Username</th><th>Balance</th></tr>
-    </thead>
+    <thead><tr><th>Username</th><th>Balance</th></tr></thead>
     <tbody></tbody>
   </table>
 
   <h2>📤 Latest 5 Withdrawals</h2>
   <table id="latest-withdrawals">
-    <thead>
-      <tr><th>Username</th><th>Amount</th></tr>
-    </thead>
+    <thead><tr><th>Username</th><th>Amount</th></tr></thead>
     <tbody></tbody>
   </table>
 
   <script>
     const scriptURL = 'https://script.google.com/macros/s/AKfycbzHVuIJeQVLA9bPVHi8Yz6Uco1MLE9k997ViQLmJIBM1cKJOLDCHOD2EFW68_silHQR/exec';
-    let balance = parseInt(localStorage.getItem("shib_balance")) || 0;
+    let balance = parseInt(localStorage.getItem("shib_balance") || 0);
     document.getElementById("balance").textContent = balance;
 
     function watchAd() {
-      const button = document.getElementById("watch-button");
-      button.disabled = true;
-      button.textContent = "⏳ Please wait...";
+      const watchBtn = document.getElementById("watchAdBtn");
+      watchBtn.disabled = true;
 
       document.getElementById("ad-container").style.display = "block";
       document.getElementById("reward-area").style.display = "block";
-
-      // Inject CPM ad
-      document.getElementById("ad-container").innerHTML = `
-        <script async="async" data-cfasync="false" src="//pl27363777.profitableratecpm.com/df82047bafa89d43b6c906d05fdf0128/invoke.js"><\/script>
-        <div id="container-df82047bafa89d43b6c906d05fdf0128"></div>
-      `;
 
       let seconds = 15;
       const countdown = document.getElementById("countdown");
@@ -119,6 +112,9 @@
         if (seconds <= 0) {
           clearInterval(interval);
           rewardUser();
+          watchBtn.disabled = false;
+          document.getElementById("ad-container").style.display = "none";
+          document.getElementById("reward-area").style.display = "none";
         }
       }, 1000);
     }
@@ -128,14 +124,6 @@
       localStorage.setItem("shib_balance", balance);
       document.getElementById("balance").textContent = balance;
       alert("✅ 7 SHIB added to your balance!");
-
-      document.getElementById("ad-container").style.display = "none";
-      document.getElementById("ad-container").innerHTML = "";
-      document.getElementById("reward-area").style.display = "none";
-
-      const button = document.getElementById("watch-button");
-      button.disabled = false;
-      button.textContent = "👀 Watch Ads (+7 SHIB)";
     }
 
     document.getElementById("withdraw-form").addEventListener("submit", function (e) {
@@ -193,7 +181,7 @@
           latestBody.innerHTML += `<tr><td>${row[2]}</td><td>${row[3]}</td></tr>`;
         });
       } catch (err) {
-        console.error("Failed to load top earners or withdrawals", err);
+        console.error("Failed to load leaderboard", err);
       }
     }
 
