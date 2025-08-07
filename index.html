@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Shiba Inu Reward</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      background-color: #111;
+      color: #fff;
+    }
+    .shiba-logo {
+      width: 120px;
+      margin: 20px auto;
+      border-radius: 50%;
+    }
+    .button {
+      padding: 10px 20px;
+      background: #ff9900;
+      border: none;
+      border-radius: 5px;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      margin: 10px;
+    }
+    #reward-area {
+      display: none;
+      margin-top: 10px;
+    }
+    table {
+      margin: 10px auto;
+      border-collapse: collapse;
+      width: 90%;
+    }
+    th, td {
+      border: 1px solid #888;
+      padding: 8px;
+    }
+    th {
+      background-color: #222;
+    }
+  </style>
+</head>
+<body>
+
+  <img
+    class="shiba-logo"
+    src="https://static.vecteezy.com/system/resources/previews/027/484/683/non_2x/shiba-inu-logo-free-vector.jpg"
+    alt="Shiba Inu Logo"
+  />
+  <h1>Shiba Inu Reward Bot</h1>
+
+  <p>Total SHIB: <span id="balance">0</span></p>
+
+  <button class="button" id="watch-button" onclick="watchAd()">👀 Watch Ads (+7 SHIB)</button>
+
+  <div id="ad-container" style="margin: 20px auto; display: none;"></div>
+
+  <div id="reward-area">
+    <p>⏳ Please wait <span id="countdown">15</span> seconds...</p>
+  </div>
+
+  <hr />
+  <h2>Withdraw</h2>
+  <form id="withdraw-form">
+    <input type="email" id="email" placeholder="Binance Email" required /><br /><br />
+    <input type="text" id="username" placeholder="Telegram Username" required /><br /><br />
+    <input type="number" id="amount" placeholder="Amount (min 150 SHIB)" required /><br /><br />
+    <button class="button" type="submit">Withdraw</button>
+  </form>
+
+  <hr />
+  <h2>🏆 Top 10 Earners</h2>
+  <table id="top-earners">
+    <thead>
+      <tr><th>Username</th><th>Balance</th></tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <h2>📤 Latest 5 Withdrawals</h2>
+  <table id="latest-withdrawals">
+    <thead>
+      <tr><th>Username</th><th>Amount</th></tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbzHVuIJeQVLA9bPVHi8Yz6Uco1MLE9k997ViQLmJIBM1cKJOLDCHOD2EFW68_silHQR/exec';
+    let balance = parseInt(localStorage.getItem("shib_balance")) || 0;
+    document.getElementById("balance").textContent = balance;
+
+    function watchAd() {
+      const button = document.getElementById("watch-button");
+      button.disabled = true;
+      button.textContent = "⏳ Please wait...";
+
+      document.getElementById("ad-container").style.display = "block";
+      document.getElementById("reward-area").style.display = "block";
+
+      // Inject CPM ad
+      document.getElementById("ad-container").innerHTML = `
+        <script async="async" data-cfasync="false" src="//pl27363777.profitableratecpm.com/df82047bafa89d43b6c906d05fdf0128/invoke.js"><\/script>
+        <div id="container-df82047bafa89d43b6c906d05fdf0128"></div>
+      `;
+
+      let seconds = 15;
+      const countdown = document.getElementById("countdown");
+      countdown.textContent = seconds;
+
+      const interval = setInterval(() => {
+        seconds--;
+        countdown.textContent = seconds;
+
+        if (seconds <= 0) {
+          clearInterval(interval);
+          rewardUser();
+        }
+      }, 1000);
+    }
+
+    function rewardUser() {
+      balance += 7;
+      localStorage.setItem("shib_balance", balance);
+      document.getElementById("balance").textContent = balance;
+      alert("✅ 7 SHIB added to your balance!");
+
+      document.getElementById("ad-container").style.display = "none";
+      document.getElementById("ad-container").innerHTML = "";
+      document.getElementById("reward-area").style.display = "none";
+
+      const button = document.getElementById("watch-button");
+      button.disabled = false;
+      button.textContent = "👀 Watch Ads (+7 SHIB)";
+    }
+
+    document.getElementById("withdraw-form").addEventListener("submit", function (e) {
+      e.preventDefault();
+
+      const email = document.getElementById("email").value.trim();
+      const username = document.getElementById("username").value.trim();
+      const amount = parseInt(document.getElementById("amount").value);
+
+      if (amount < 150) {
+        alert("❌ Minimum withdraw is 150 SHIB");
+        return;
+      }
+
+      if (amount > balance) {
+        alert("❌ You don't have enough balance!");
+        return;
+      }
+
+      fetch(scriptURL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+          email: email,
+          username: username,
+          amount: amount
+        })
+      });
+
+      alert("✅ Withdraw request submitted!");
+
+      balance -= amount;
+      localStorage.setItem("shib_balance", balance);
+      document.getElementById("balance").textContent = balance;
+      document.getElementById("withdraw-form").reset();
+    });
+
+    async function loadData() {
+      try {
+        const top10 = await fetch(scriptURL + "?action=top10").then(res => res.json());
+        const latest5 = await fetch(scriptURL + "?action=latest").then(res => res.json());
+
+        const topBody = document.querySelector("#top-earners tbody");
+        topBody.innerHTML = "";
+        top10.forEach(row => {
+          topBody.innerHTML += `<tr><td>${row[1]}</td><td>${row[2]}</td></tr>`;
+        });
+
+        const latestBody = document.querySelector("#latest-withdrawals tbody");
+        latestBody.innerHTML = "";
+        latest5.forEach(row => {
+          latestBody.innerHTML += `<tr><td>${row[2]}</td><td>${row[3]}</td></tr>`;
+        });
+      } catch (err) {
+        console.error("Failed to load top earners or withdrawals", err);
+      }
+    }
+
+    loadData();
+  </script>
+</body>
+</html>
